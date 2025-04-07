@@ -1,5 +1,7 @@
 # Popover Example
 
+![Build Status](https://img.shields.io/github/workflow/status/vovazum/my-popover-project/CI?label=Build)
+
 Этот проект реализует поповер на чистом JavaScript без использования jQuery. Для тестирования используется Puppeteer.
 
 ## Структура проекта
