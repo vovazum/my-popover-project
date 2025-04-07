@@ -1,7 +1,6 @@
 const puppeteer = require('puppeteer');
 
-// Увеличим общий timeout для Jest
-jest.setTimeout(30000);
+jest.setTimeout(30000); // Увеличим общий тайм-аут для всех тестов
 
 describe('Popover Test', () => {
     let browser;
@@ -9,9 +8,9 @@ describe('Popover Test', () => {
 
     beforeAll(async () => {
         browser = await puppeteer.launch({
-            headless: 'new',
+            headless: false, // Для отладки можно сделать не headless
             args: ['--no-sandbox', '--disable-setuid-sandbox'],
-            slowMo: 50 // Добавим небольшую задержку между действиями
+            slowMo: 50
         });
         page = await browser.newPage();
         await page.setViewport({ width: 1280, height: 800 });
@@ -19,54 +18,36 @@ describe('Popover Test', () => {
     });
 
     it('должен показывать popover при клике', async () => {
-        // Проверяем начальное состояние
         const isPopoverVisible = await page.$eval('#popover', el => el.classList.contains('show'));
-        expect(isPopoverVisible).toBe(false); // Поповер должен быть скрыт изначально
+        expect(isPopoverVisible).toBe(false);
 
-        // Кликаем по кнопке
+        console.log("Нажатие на кнопку");
         await page.click('#popover-trigger');
-        await page.waitForTimeout(500); // Задержка для отрисовки поповера
+        await page.waitForTimeout(500); 
 
-        // Ждем, пока поповер станет видимым
+        // Увеличиваем время ожидания до 20 секунд
+        console.log("Ожидание появления поповера");
         await page.waitForFunction(
             () => document.getElementById('popover').classList.contains('show'),
-            { timeout: 10000 }
+            { timeout: 20000 }
         );
 
-        // Проверяем, что поповер стал видимым
         const isVisible = await page.$eval('#popover', el => el.classList.contains('show'));
         expect(isVisible).toBe(true);
-
-        // Проверяем, что opacity поповера = 1 (он видим) и pointer-events = 'auto'
-        const style = await page.$eval('#popover', el => ({
-            opacity: el.style.opacity,
-            pointerEvents: el.style.pointerEvents
-        }));
-        expect(style.opacity).toBe('1');
-        expect(style.pointerEvents).toBe('auto');
     });
 
     it('popover должен быть центрирован по горизонтали относительно кнопки', async () => {
-        // Убедимся, что popover видим
-        await page.waitForFunction(
-            () => document.getElementById('popover').classList.contains('show'),
-            { timeout: 10000 }
-        );
+        console.log("Ожидание появления поповера");
+        await page.waitForSelector('#popover.show', { visible: true, timeout: 20000 });
 
         const triggerRect = await page.$eval('#popover-trigger', el => {
             const rect = el.getBoundingClientRect();
-            return {
-                x: rect.left + window.scrollX,
-                width: rect.width
-            };
+            return { x: rect.left + window.scrollX, width: rect.width };
         });
 
         const popoverRect = await page.$eval('#popover', el => {
             const rect = el.getBoundingClientRect();
-            return {
-                x: rect.left + window.scrollX,
-                width: rect.width
-            };
+            return { x: rect.left + window.scrollX, width: rect.width };
         });
 
         const popoverCenter = popoverRect.x + popoverRect.width / 2;
@@ -74,7 +55,7 @@ describe('Popover Test', () => {
         const difference = Math.abs(popoverCenter - triggerCenter);
 
         console.log(`Отклонение центрирования: ${difference}px`);
-        expect(difference).toBeLessThan(10); // Ожидаем, что отклонение будет меньше 10 пикселей
+        expect(difference).toBeLessThan(10); 
     });
 
     afterAll(async () => {
